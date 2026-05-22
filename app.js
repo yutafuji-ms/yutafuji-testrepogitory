@@ -48,7 +48,10 @@ questions.forEach((question, index) => {
   article.className = "question";
 
   const title = document.createElement("p");
-  title.innerHTML = `<strong>Q${index + 1}.</strong> ${question.text}`;
+  const titlePrefix = document.createElement("strong");
+  titlePrefix.textContent = `Q${index + 1}. `;
+  title.appendChild(titlePrefix);
+  title.appendChild(document.createTextNode(question.text));
   article.appendChild(title);
 
   question.choices.forEach((choice, choiceIndex) => {
@@ -82,20 +85,50 @@ submitButton.addEventListener("click", () => {
       selectedIndex >= 0 ? question.choices[selectedIndex] : "未回答";
     const correctLabel = question.choices[question.answer];
 
-    details.push(`
-      <div class="feedback ${isCorrect ? "correct" : "incorrect"}">
-        <p><strong>Q${index + 1}:</strong> ${question.text}</p>
-        <p>あなたの回答: ${selectedLabel}</p>
-        <p>正解: ${correctLabel}</p>
-        <p>解説: ${question.explanation}</p>
-      </div>
-    `);
+    details.push({
+      number: index + 1,
+      text: question.text,
+      selectedLabel,
+      correctLabel,
+      explanation: question.explanation,
+      isCorrect,
+    });
   });
 
   resultContainer.classList.remove("hidden");
-  resultContainer.innerHTML = `
-    <h2>結果: ${score} / ${questions.length}</h2>
-    <p>${score === questions.length ? "満点です！" : "復習して再チャレンジしてみましょう。"}</p>
-    ${details.join("")}
-  `;
+  resultContainer.replaceChildren();
+
+  const heading = document.createElement("h2");
+  heading.textContent = `結果: ${score} / ${questions.length}`;
+  resultContainer.appendChild(heading);
+
+  const summary = document.createElement("p");
+  summary.textContent =
+    score === questions.length
+      ? "満点です！"
+      : "復習して再チャレンジしてみましょう。";
+  resultContainer.appendChild(summary);
+
+  details.forEach((detail) => {
+    const feedback = document.createElement("div");
+    feedback.className = `feedback ${detail.isCorrect ? "correct" : "incorrect"}`;
+
+    const q = document.createElement("p");
+    const qPrefix = document.createElement("strong");
+    qPrefix.textContent = `Q${detail.number}: `;
+    q.appendChild(qPrefix);
+    q.appendChild(document.createTextNode(detail.text));
+
+    const selected = document.createElement("p");
+    selected.textContent = `あなたの回答: ${detail.selectedLabel}`;
+
+    const answer = document.createElement("p");
+    answer.textContent = `正解: ${detail.correctLabel}`;
+
+    const explanation = document.createElement("p");
+    explanation.textContent = `解説: ${detail.explanation}`;
+
+    feedback.append(q, selected, answer, explanation);
+    resultContainer.appendChild(feedback);
+  });
 });
